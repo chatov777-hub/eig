@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ЕИГ — трекер</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0e12; --panel:#14171e; --panel2:#1b1f29; --line:#272c38;
+    --txt:#e8ebf0; --mut:#8b93a4; --acc:#c6ff3b; --acc2:#3bb0ff; --acc3:#b47cff;
+    --peak:#7cf0d0; --green:#2fd07a; --yellow:#ffd23b; --orange:#ff8a3b; --red:#ff4d5e;
+    --r:14px; --nav:62px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Spline Sans',system-ui,sans-serif;background:var(--bg);color:var(--txt);
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom));
+    background-image:radial-gradient(circle at 12% -10%,rgba(198,255,59,.07),transparent 45%),
+                     radial-gradient(circle at 100% 0%,rgba(59,176,255,.06),transparent 40%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 20px}
+  header{margin:4px 0 16px}
+  .kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--acc);font-weight:600}
+  h1{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(27px,7vw,40px);line-height:.95;
+     letter-spacing:.01em;text-transform:uppercase;margin:5px 0 3px}
+  h1 span{color:var(--acc)}
+  .sub{color:var(--mut);font-size:13px;max-width:60ch}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+  .card h2{font-family:'Anton',sans-serif;font-weight:400;font-size:19px;letter-spacing:.03em;
+           text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .card h2 .r{margin-left:auto;font-family:'Spline Sans';font-size:12px;letter-spacing:0;
+     text-transform:none;color:var(--mut);font-weight:500}
+
+  .q{margin:12px 0}
+  .qhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .qhead label{font-weight:600;font-size:14px}
+  .qhead label small{color:var(--mut);font-weight:400;font-size:12px}
+  .qhead .num{font-family:'Anton',sans-serif;font-size:21px;min-width:32px;text-align:right}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;
+     background:var(--panel2);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+     background:var(--acc);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--acc);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--acc);
+     border:3px solid var(--bg);cursor:pointer}
+
+  button{font-family:'Spline Sans',sans-serif;font-weight:600;font-size:15px;border:0;border-radius:10px;
+     padding:13px 18px;cursor:pointer;transition:transform .08s,filter .15s}
+  button:active{transform:translateY(1px)}
+  .btns{display:flex;gap:9px;margin-top:16px}
+  .b-main{background:var(--acc);color:#0c0e12;flex:1}
+  .b-ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .b-done{background:var(--green);color:#04180d;width:100%;margin-top:14px;font-size:16px;padding:15px}
+  .b-go{background:var(--acc2);color:#06121c;width:100%;font-size:16px;padding:15px}
+  .b-sm{padding:9px 13px;font-size:13px}
+
+  .resrow{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-top:14px}
+  .resrow.eq{grid-template-columns:1fr 1fr}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px}
+  .stat .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .stat .big{font-family:'Anton',sans-serif;font-size:34px;line-height:1;margin-top:3px}
+  .stat .big small{font-size:15px;color:var(--mut)}
+  .stat .zsub{font-size:12px;color:var(--mut);margin-top:2px}
+  .pill{display:inline-block;margin-top:5px;font-weight:700;font-size:14px;padding:6px 13px;border-radius:999px}
+  .z-peak{background:rgba(124,240,208,.14);color:var(--peak);border:1px solid rgba(124,240,208,.34)}
+  .z-green{background:rgba(47,208,122,.16);color:var(--green);border:1px solid rgba(47,208,122,.35)}
+  .z-yellow{background:rgba(255,210,59,.14);color:var(--yellow);border:1px solid rgba(255,210,59,.32)}
+  .z-orange{background:rgba(255,138,59,.14);color:var(--orange);border:1px solid rgba(255,138,59,.32)}
+  .z-red{background:rgba(255,77,94,.14);color:var(--red);border:1px solid rgba(255,77,94,.32)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips button{padding:9px 12px;font-size:13px;background:var(--panel2);border:1px solid var(--line);color:var(--mut);border-radius:8px}
+  .chips button.on{background:var(--acc);color:#0c0e12;border-color:var(--acc)}
+  .chips.time button.on{background:var(--acc2);color:#06121c;border-color:var(--acc2)}
+
+  .verdict{padding:15px;border-radius:12px;margin-bottom:14px;border-left:4px solid}
+  .verdict h3{font-family:'Anton',sans-serif;font-weight:400;font-size:21px;letter-spacing:.02em;text-transform:uppercase}
+  .verdict p{color:var(--mut);font-size:13px;margin-top:4px}
+  .v-peak{background:rgba(124,240,208,.07);border-color:var(--peak)}
+  .v-green{background:rgba(47,208,122,.08);border-color:var(--green)}
+  .v-yellow{background:rgba(255,210,59,.07);border-color:var(--yellow)}
+  .v-orange{background:rgba(255,138,59,.07);border-color:var(--orange)}
+  .v-red{background:rgba(255,77,94,.07);border-color:var(--red)}
+
+  .block-title{font-family:'Anton',sans-serif;font-weight:400;font-size:14px;letter-spacing:.08em;
+     text-transform:uppercase;color:var(--acc);margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .block-title.cardio{color:var(--acc2)}
+  .block-title.core{color:var(--orange)}
+  .block-title.apre{color:var(--acc3)}
+  .block-title .t{margin-left:auto;font-family:'Spline Sans';font-size:12px;letter-spacing:0;
+     text-transform:none;color:var(--mut);font-weight:500}
+
+  /* ---- секундомер сессии ---- */
+  .clock{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);
+     border-radius:12px;padding:13px 15px}
+  .clock .big{font-family:'Anton',sans-serif;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+  .clock .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .clock .sp{margin-left:auto;display:flex;gap:7px}
+  .clock.run .big{color:var(--acc)}
+  .clock button{padding:10px 14px;font-size:13px}
+
+  /* ---- упражнение ---- */
+  .exrow{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+  .exrow:last-child{border-bottom:0}
+  .cbx{flex:0 0 27px;width:27px;height:27px;border-radius:8px;border:2px solid var(--line);
+       background:var(--panel2);margin-top:2px;cursor:pointer;position:relative;transition:.15s}
+  .cbx:active{transform:scale(.92)}
+  .cbx.on{background:var(--green);border-color:var(--green)}
+  .cbx.on::after{content:'';position:absolute;left:8px;top:3px;width:6px;height:12px;
+      border:solid #04180d;border-width:0 3px 3px 0;transform:rotate(45deg)}
+  .exbody{flex:1;min-width:0}
+  .exname{font-weight:600;font-size:14.5px;line-height:1.3}
+  .exname .tag{display:inline-block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+     background:rgba(180,124,255,.16);color:var(--acc3);border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+  .exhint{color:var(--mut);font-size:12px;margin-top:2px}
+  .exmeta{color:var(--acc);font-size:13px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .exmeta .rest{color:var(--acc2)}
+  .exrow.done .exname,.exrow.done .exmeta{opacity:.45;text-decoration:line-through}
+  .exrow.done .exhint{opacity:.4}
+  .exinputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:7px}
+  .exinputs input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+     border-radius:8px;padding:8px 8px;font-family:'Spline Sans';font-size:13.5px;min-width:0}
+  .exinputs input::placeholder{color:#5a6172;font-size:11.5px}
+  .restdone{font-size:11.5px;color:var(--acc2);margin-top:4px}
+
+  .prog{height:6px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:8px}
+  .prog i{display:block;height:100%;background:var(--green);border-radius:6px;transition:width .25s}
+
+  .note{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+     font-size:12.5px;color:var(--mut);margin-top:12px}
+  .note b{color:var(--txt)}
+  .apreBox{background:var(--panel2);border:1px solid rgba(180,124,255,.3);border-radius:10px;padding:13px;margin-top:8px}
+  .apreBox .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .apreBox input{width:78px;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+     border-radius:8px;padding:9px 10px;font-size:15px}
+  .apreOut{margin-top:9px;font-size:13.5px;padding:10px 12px;border-radius:8px;background:rgba(180,124,255,.1);
+     border:1px solid rgba(180,124,255,.25);display:none}
+  .apreOut b{color:var(--acc3)}
+
+  /* ---- календарь ---- */
+  .calhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .calhead .m{font-family:'Anton',sans-serif;font-size:20px;text-transform:uppercase;flex:1;text-align:center}
+  .calhead button{padding:8px 14px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-size:16px}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal .dow{text-align:center;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:3px 0}
+  .cell{aspect-ratio:1;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
+     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative}
+  .cell.empty{background:transparent;border-color:transparent;cursor:default}
+  .cell .d{font-size:13px;font-weight:600}
+  .cell .mk{width:7px;height:7px;border-radius:50%}
+  .cell .w{position:absolute;top:3px;right:4px;font-size:9px;color:var(--green)}
+  .cell.today{border-color:var(--acc);border-width:2px}
+  .cell.sel{background:rgba(198,255,59,.14);border-color:var(--acc)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11.5px;color:var(--mut)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:9px;height:9px;border-radius:50%;display:block}
+
+  /* ---- лог ---- */
+  .logitem{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:9px}
+  .logtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .logdate{font-family:'Anton',sans-serif;font-size:16px}
+  .logbadge{font-size:11px;padding:3px 9px;border-radius:999px}
+  .logstats{font-size:12.5px;color:var(--mut);margin-top:5px}
+  .logex{font-size:12.5px;color:var(--mut);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+  .logex div{margin:3px 0}
+  .logex b{color:var(--txt);font-weight:600}
+
+  canvas{width:100%;height:150px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;margin-top:8px}
+
+  /* ---- таймер отдыха ---- */
+  .timerbar{position:fixed;left:0;right:0;bottom:calc(var(--nav) + env(safe-area-inset-bottom));
+     background:rgba(20,24,31,.97);backdrop-filter:blur(14px);border-top:2px solid var(--acc2);
+     padding:12px 14px;z-index:60;display:none;box-shadow:0 -8px 26px rgba(0,0,0,.45)}
+  .timerbar.on{display:block}
+  .timerbar.fin{border-top-color:var(--green)}
+  .tb-row{display:flex;align-items:center;gap:12px;max-width:760px;margin:0 auto}
+  .tb-val{font-family:'Anton',sans-serif;font-size:36px;line-height:1;font-variant-numeric:tabular-nums;color:var(--acc2);min-width:96px}
+  .timerbar.fin .tb-val{color:var(--green)}
+  .tb-lab{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .tb-name{font-size:12px;color:var(--txt);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+  .tb-btns{margin-left:auto;display:flex;gap:6px}
+  .tb-btns button{padding:10px 12px;font-size:13px;background:var(--panel2);border:1px solid var(--line);color:var(--txt)}
+  .tb-btns .go{background:var(--acc2);color:#06121c;border-color:var(--acc2)}
+  .tb-prog{height:4px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:9px;max-width:760px;margin-left:auto;margin-right:auto}
+  .tb-prog i{display:block;height:100%;background:var(--acc2);border-radius:4px;transition:width .3s linear}
+  .timerbar.fin .tb-prog i{background:var(--green)}
+
+  /* ---- навигация ---- */
+  nav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav) + env(safe-area-inset-bottom));
+     padding-bottom:env(safe-area-inset-bottom);
+     background:rgba(16,19,25,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+     display:flex;z-index:70}
+  nav button{flex:1;background:none;border:0;color:var(--mut);display:flex;flex-direction:column;
+     align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;padding:0;border-radius:0;position:relative}
+  nav button .ic{font-size:18px;line-height:1}
+  nav button.on{color:var(--acc)}
+  nav button .badge{position:absolute;top:7px;right:calc(50% - 20px);width:7px;height:7px;border-radius:50%;background:var(--acc2)}
+  .tab{display:none} .tab.on{display:block}
+
+  details{margin-top:6px}
+  summary{cursor:pointer;color:var(--acc2);font-size:12.5px;font-weight:600;list-style:none;margin-top:6px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:'▸ ';} details[open] summary::before{content:'▾ ';}
+  .ctx{font-size:12.5px;color:var(--mut);margin-top:8px} .ctx li{margin:6px 0 6px 17px}
+  .ctx b{color:var(--txt)}
+  .empty-msg{color:var(--mut);font-size:13.5px;text-align:center;padding:26px 10px}
+  .foot{text-align:center;color:var(--mut);font-size:10.5px;margin-top:22px;line-height:1.7}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 90px);
+     background:var(--green);color:#04180d;padding:11px 20px;border-radius:999px;font-weight:700;font-size:14px;
+     z-index:100;opacity:0;pointer-events:none;transition:opacity .25s}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ============ ВКЛАДКА 1: ЕИГ ============ -->
+<div class="tab on" id="tab-eig"><div class="wrap">
+  <header>
+    <div class="kicker">Утренняя диагностика</div>
+    <h1>ЕИГ — <span>индекс</span><br>готовности</h1>
+    <p class="sub">6 параметров относительно твоего личного базелайна. Результат задаёт режим тренировки на вкладке рядом.</p>
+  </header>
+
+  <div class="card">
+    <h2>🌅 Опросник</h2>
+    <p style="color:var(--mut);font-size:12.5px;margin-bottom:6px">0–10, где 10 = «отлично / полон сил / мышцы свежие». До кардио и кофе.</p>
+    <div id="form"></div>
+    <div class="q">
+      <div class="qhead"><label>🛌 Часы сна <small>(норма ~7.5)</small></label><span class="num" id="nHours">7.5</span></div>
+      <input type="range" id="hours" min="3" max="11" step="0.5" value="7.5" oninput="nHours.textContent=this.value">
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="kicker" style="color:var(--mut);margin-bottom:7px">День сплита</div>
+      <div class="chips" id="daypick"></div>
+    </div>
+    <div style="margin-top:13px">
+      <div class="kicker" style="color:var(--mut);margin-bottom:7px">Сколько есть времени</div>
+      <div class="chips time" id="timepick"></div>
+    </div>
+
+    <div class="btns">
+      <button class="b-main" onclick="run()">Рассчитать индекс</button>
+      <button class="b-ghost b-sm" onclick="resetForm()">Сброс</button>
+    </div>
+
+    <div class="resrow">
+      <div class="stat"><div class="lab">Индекс</div><div class="big" id="idxVal">—<small>/100</small></div><div class="zsub" id="zVal"></div></div>
+      <div class="stat"><div class="lab">Режим</div><div id="modePill" style="margin-top:5px"><span class="pill z-yellow">—</span></div></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--mut);margin-top:7px" id="modeflag"></div>
+  </div>
+
+  <div class="card" id="eigVerdictCard" style="display:none">
+    <div class="verdict" id="verdict"></div>
+    <div id="eigPlanSummary"></div>
+    <button class="b-go" onclick="tab('train')" style="margin-top:14px">Перейти к тренировке →</button>
+  </div>
+
+  <div class="foot">
+    Ориентир, не медицинское назначение. Боль (не жжение) = стоп.<br>
+    3 красных дня подряд при нормальном сне → снизь объём недели.
+  </div>
+</div></div>
+
+<!-- ============ ВКЛАДКА 2: ТРЕНИРОВКА ============ -->
+<div class="tab" id="tab-train"><div class="wrap">
+  <header>
+    <div class="kicker">Трекер</div>
+    <h1><span>Тренировка</span></h1>
+  </header>
+
+  <div id="noPlan" class="card">
+    <p class="empty-msg">Сначала рассчитай индекс на вкладке ЕИГ —<br>программа подстроится под сегодняшнее состояние.</p>
+    <button class="b-go" onclick="tab('eig')">К опроснику</button>
+  </div>
+
+  <div id="trainBody" style="display:none">
+    <div class="card">
+      <h2>⏱️ Сессия<span class="r" id="trainMode"></span></h2>
+      <div class="clock" id="clock">
+        <div>
+          <div class="lab">Общее время</div>
+          <div class="big" id="clockVal">00:00</div>
+        </div>
+        <div class="sp">
+          <button class="b-ghost" id="clockBtn" onclick="clockToggle()">Старт</button>
+        </div>
+      </div>
+      <div class="prog"><i id="progBar" style="width:0%"></i></div>
+      <div style="font-size:12px;color:var(--mut);margin-top:5px" id="progTxt"></div>
+    </div>
+
+    <div class="card">
+      <div id="sessionBody"></div>
+      <button class="b-done" onclick="finishWorkout()">Завершить и записать</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- ============ ВКЛАДКА 3: КАЛЕНДАРЬ ============ -->
+<div class="tab" id="tab-cal"><div class="wrap">
+  <header><div class="kicker">История</div><h1><span>Календарь</span></h1></header>
+  <div class="card">
+    <div class="calhead">
+      <button onclick="calShift(-1)">‹</button>
+      <div class="m" id="calMonth"></div>
+      <button onclick="calShift(1)">›</button>
+    </div>
+    <div class="cal" id="calGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--peak)"></i>Пиковая</span>
+      <span><i style="background:var(--green)"></i>Тяжёлая</span>
+      <span><i style="background:var(--yellow)"></i>Средняя</span>
+      <span><i style="background:var(--orange)"></i>Лёгкая</span>
+      <span><i style="background:var(--red)"></i>Восстановление</span>
+      <span style="color:var(--green)">✓ тренировка записана</span>
+    </div>
+  </div>
+  <div class="card"><h2>📈 Индекс за 30 дней</h2><canvas id="chart"></canvas></div>
+  <div id="calDetail"></div>
+</div></div>
+
+<!-- ============ ВКЛАДКА 4: ЛОГ ============ -->
+<div class="tab" id="tab-log"><div class="wrap">
+  <header><div class="kicker">Дневник</div><h1><span>Лог</span></h1></header>
+  <div class="card">
+    <h2>📊 Сводка<span class="r" id="sumRange"></span></h2>
+    <div id="summary"></div>
+  </div>
+  <div class="card">
+    <h2>💾 Данные</h2>
+    <p style="font-size:12.5px;color:var(--mut);margin-bottom:10px">Всё хранится только на телефоне. Выгружай регулярно — очистка данных браузера стирает историю.</p>
+    <div class="btns" style="margin-top:0">
+      <button class="b-ghost b-sm" onclick="exportJSON()">Экспорт JSON</button>
+      <button class="b-ghost b-sm" onclick="exportCSV()">Экспорт CSV</button>
+    </div>
+  </div>
+  <div id="logList"></div>
+</div></div>
+
+<!-- таймер отдыха -->
+<div class="timerbar" id="timerBar">
+  <div class="tb-row">
+    <div>
+      <div class="tb-lab" id="tbLab">Отдых</div>
+      <div class="tb-name" id="tbName"></div>
+    </div>
+    <div class="tb-val" id="tbVal">00:00</div>
+    <div class="tb-btns">
+      <button onclick="restAdd(-15)">−15</button>
+      <button onclick="restAdd(15)">+15</button>
+      <button class="go" onclick="restStop()">Готово</button>
+    </div>
+  </div>
+  <div class="tb-prog"><i id="tbProg" style="width:100%"></i></div>
+</div>
+
+<nav>
+  <button class="on" id="nav-eig" onclick="tab('eig')"><span class="ic">🌅</span>ЕИГ</button>
+  <button id="nav-train" onclick="tab('train')"><span class="ic">🏋️</span>Тренировка<span class="badge" id="trainBadge" style="display:none"></span></button>
+  <button id="nav-cal" onclick="tab('cal')"><span class="ic">📅</span>Календарь</button>
+  <button id="nav-log" onclick="tab('log')"><span class="ic">📋</span>Лог</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= ХРАНИЛИЩЕ ================= */
+const K_CHECK="eig_checkins_v1", K_SESS="eig_sessions_v1", K_DRAFT="eig_draft_v2";
+const ls={
+  get:(k,d)=>{ try{const v=localStorage.getItem(k); return v===null?d:JSON.parse(v)}catch(e){return d} },
+  set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v))}catch(e){} }
+};
+const today=()=>new Date().toISOString().slice(0,10);
+const checkins=()=>ls.get(K_CHECK,[]);
+const sessions=()=>ls.get(K_SESS,[]);
+const mmss=s=>{s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("on");
+  setTimeout(()=>t.classList.remove("on"),2200);
+}
+
+/* ================= ОПРОСНИК ================= */
+const ITEMS=[
+  {k:"sleep",  t:"😴 Качество сна",                 w:1.5, def:7},
+  {k:"fatigue",t:"⚡ Энергия / нет усталости",        w:1.5, def:7},
+  {k:"doms",   t:"💪 Мышцы свежие", sub:"(нет крепатуры)", w:1.5, def:7},
+  {k:"stress", t:"🧘 Спокойствие", sub:"(нет стресса)",    w:1.0, def:6},
+  {k:"mood",   t:"🔥 Настроение / мотивация",         w:1.0, def:7},
+  {k:"appetite",t:"🍽️ Аппетит / самочувствие",        w:0.5, def:7},
+];
+const W_HOURS=1.0, NORM_SLEEP=7.5;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+document.getElementById("form").innerHTML = ITEMS.map(it=>
+ `<div class="q"><div class="qhead">
+    <label>${it.t} ${it.sub?`<small>${it.sub}</small>`:""}</label>
+    <span class="num" id="n_${it.k}">${it.def}</span></div>
+  <input type="range" id="${it.k}" min="0" max="10" step="1" value="${it.def}"
+    oninput="document.getElementById('n_${it.k}').textContent=this.value"></div>`).join("");
+
+function readItems(){
+  const o={}; ITEMS.forEach(it=>o[it.k]=+document.getElementById(it.k).value);
+  o.hours=+document.getElementById("hours").value; return o;
+}
+function computeIndex(){
+  let raw=0,max=0;
+  ITEMS.forEach(it=>{ raw+=it.w*(+document.getElementById(it.k).value); max+=it.w*10; });
+  const hrs=+document.getElementById("hours").value;
+  raw+=W_HOURS*clamp(10-2*Math.abs(hrs-NORM_SLEEP),0,10); max+=W_HOURS*10;
+  return Math.round(100*raw/max);
+}
+function baselineZ(idx){
+  const prev=checkins().filter(r=>r.date!==today()).slice(-7).map(r=>r.index);
+  if(prev.length<3) return {z:null,mean:null};
+  const mean=prev.reduce((a,b)=>a+b,0)/prev.length;
+  const sd=Math.sqrt(prev.reduce((a,b)=>a+(b-mean)**2,0)/prev.length)||1;
+  return {z:(idx-mean)/sd, mean};
+}
+
+/* ================= РЕЖИМЫ =================
+   restMul — множитель рекомендованной паузы: чем ниже готовность,
+   тем длиннее отдых между подходами.                              */
+const MODES={
+  peak  :{name:"Пиковая", cls:"peak", rpe:"9 (1 в запасе)", restMul:1.15, finisher:true, apre:true,
+          verdict:"Редкий день максимума", desc:"Ресурс выше твоей нормы — день попытки рекорда в базовом движении. Такие дни должны быть редкими: 1–2 раза в месяц. Пауза длиннее — работаешь с максимальным весом."},
+  heavy :{name:"Тяжёлая", cls:"green", rpe:"8 (2 в запасе)", restMul:1.0, finisher:true, apre:true,
+          verdict:"Можно прогрессировать", desc:"Полный объём. Именно эти дни дают основной прирост. Добавь вес там, где APRE показал запас."},
+  medium:{name:"Средняя", cls:"yellow", rpe:"7 (3 в запасе)", restMul:1.0, finisher:false, apre:true,
+          verdict:"Работаем по плану", desc:"Стандартная качественная сессия. Фокус на технике и темпе."},
+  light :{name:"Лёгкая", cls:"orange", rpe:"5–6 (4+ в запасе)", restMul:1.25, finisher:false, apre:false,
+          verdict:"Объём вниз, без отказа", desc:"Активное восстановление с железом: подходов меньше, вес −15–20%, паузы длиннее, интервалы меняем на Zone 2."},
+  rest  :{name:"Восстановление", cls:"red", rpe:"—", restMul:1.0, finisher:false, apre:false,
+          verdict:"Сегодня без силовой", desc:"Прогулка, мобилити, дыхание. Zone 2 в спокойном темпе полезна — она и есть главный рычаг по твоей цели."},
+};
+function modeOf(index,z){
+  let key;
+  if(z===null){ key = index>=85?"peak": index>=70?"heavy": index>=50?"medium": index>=34?"light":"rest"; }
+  else { key = z>=1.0?"peak": z>=-0.3?"heavy": z>-1.2?"medium": z>-2.0?"light":"rest"; }
+  return {key,...MODES[key]};
+}
+/* Подходы по режиму — явные правила: множители при базовых 3 подходах
+   схлопывались бы при округлении (1.1/1.0/0.85 → все 3).            */
+function setsFor(base, modeKey, prio){
+  switch(modeKey){
+    case "peak":   return prio===1 ? base+1 : base;
+    case "heavy":  return base;
+    case "medium": return prio===1 ? base : Math.max(2, base-1);
+    case "light":  return Math.max(2, Math.round(base*0.55));
+    default:       return 0;
+  }
+}
+/* Рекомендованная пауза = базовая для упражнения × поправка режима ЕИГ */
+function restFor(base, modeKey){
+  return Math.round(base*(MODES[modeKey]?MODES[modeKey].restMul:1)/5)*5;
+}
+
+/* ================= ПРОГРАММА ================= */
+const DAYS={
+ 1:{name:"Низ тела + кор",icon:"🦵",z2:35,cardio:"Zone 2",ex:[
+   {n:"Жим ногами в тренажёре",t:"стопы шире, без блокировки колен",sets:3,reps:"12–15",rest:90,prio:1,apre:true},
+   {n:"Румынская тяга с гантелями",t:"спина прямая, таз назад",sets:3,reps:"10–12",rest:90,prio:1},
+   {n:"Сгибание ног в тренажёре",t:"медленная негативная фаза",sets:3,reps:"12–15",rest:60,prio:2},
+   {n:"Выпады с гантелями на месте",t:"корпус вертикально",sets:2,reps:"10/нога",rest:75,prio:2},
+   {n:"Подъём на носки стоя",t:"полная амплитуда, пауза вверху",sets:3,reps:"15–20",rest:45,prio:3}]},
+ 2:{name:"Верх — жимовой акцент + кор",icon:"💪",z2:35,cardio:"Zone 2",ex:[
+   {n:"Жим гантелей лёжа",t:"угол 15–20°, без удара в груди",sets:3,reps:"10–12",rest:90,prio:1,apre:true},
+   {n:"Жим сидя в тренажёре",t:"локти не до отказа назад",sets:3,reps:"10–12",rest:90,prio:1},
+   {n:"Жим гантелей сидя над головой",t:"корпус зафиксирован",sets:3,reps:"10–12",rest:75,prio:2},
+   {n:"Разведение в кроссовере",t:"лёгкий вес, чувство грудных",sets:2,reps:"15",rest:60,prio:3},
+   {n:"Разгибание рук на блоке",t:"локти прижаты",sets:3,reps:"12–15",rest:45,prio:3}]},
+ 3:{name:"Метаболическое кондиционирование + кор",icon:"🔥",z2:0,cardio:"Интервалы",ex:[
+   {n:"Гребной тренажёр / battle rope",t:"30 сек работа в темпе",sets:4,reps:"30 сек",rest:60,prio:1},
+   {n:"Свинг гирей лёгкой",t:"толчок тазом, не руками",sets:4,reps:"15",rest:60,prio:1},
+   {n:"Жим-тяга в кроссовере (сет)",t:"без паузы push→pull",sets:3,reps:"12+12",rest:75,prio:2},
+   {n:"Степ-ап на платформу",t:"невысокая, без прыжка",sets:3,reps:"12/нога",rest:60,prio:2}]},
+ 4:{name:"Низ тела (вариация) + кор",icon:"🦵",z2:35,cardio:"Zone 2",ex:[
+   {n:"Гакк-присед / присед в Смите",t:"глубина по комфорту колен",sets:3,reps:"10–12",rest:90,prio:1,apre:true},
+   {n:"Тяга на прямых ногах с трэп-грифом",t:"щадит поясницу",sets:3,reps:"10–12",rest:90,prio:1},
+   {n:"Разгибание ног в тренажёре",t:"пауза в верхней точке",sets:3,reps:"12–15",rest:60,prio:2},
+   {n:"Ягодичный мостик со штангой",t:"подбородок к груди",sets:3,reps:"12–15",rest:75,prio:2},
+   {n:"Отведение бедра в тренажёре",t:"медленно, без рывка",sets:2,reps:"15–20",rest:45,prio:3}]},
+ 5:{name:"Верх — тяговый акцент + кор",icon:"💪",z2:20,cardio:"Интервалы",ex:[
+   {n:"Тяга верхнего блока к груди",t:"лопатки вниз-назад",sets:3,reps:"10–12",rest:90,prio:1,apre:true},
+   {n:"Тяга гантели в наклоне с упором",t:"без скручивания корпуса",sets:3,reps:"10–12",rest:90,prio:1},
+   {n:"Горизонтальная тяга в блоке",t:"свести лопатки",sets:3,reps:"12",rest:75,prio:2},
+   {n:"Обратная бабочка / задняя дельта",t:"лёгкий вес",sets:2,reps:"15",rest:60,prio:3},
+   {n:"Сгибание рук с гантелями",t:"без раскачки",sets:3,reps:"12–15",rest:45,prio:3}]},
+ 6:{name:"Функциональное полное тело + кор",icon:"🤸",z2:45,cardio:"Zone 2",ex:[
+   {n:"Гоблет-присед с гантелью",t:"локти внутри колен",sets:3,reps:"12",rest:75,prio:1},
+   {n:"Тяга в наклоне двумя гантелями",t:"корпус под 45°",sets:3,reps:"12",rest:75,prio:1},
+   {n:"Жим гантелей стоя",t:"кор напряжён",sets:3,reps:"10–12",rest:75,prio:2},
+   {n:"Фермерская прогулка",t:"плечи вниз, шаг короткий",sets:3,reps:"30 м",rest:60,prio:2}]},
+ 0:{name:"Активное восстановление",icon:"🌿",z2:45,cardio:"Zone 1–2",rec:true,ex:[
+   {n:"Длинная прогулка / эллипс",t:"разговорный темп — это и есть Zone 2",reps:"40–60 мин",prio:1},
+   {n:"Мобилити тазобедренных / грудного",t:"без боли",reps:"10 мин",prio:1},
+   {n:"Растяжка + дыхание 4-7-8",t:"снижение симпатического тонуса",reps:"10 мин",prio:2}]},
+};
+const CORE=[
+  {n:"Планка",t:"таз не проваливается",sets:3,reps:"30–45 сек",rest:45,prio:1},
+  {n:"Мёртвый жук (dead bug)",t:"поясница прижата к полу",sets:3,reps:"10/сторона",rest:40,prio:1},
+  {n:"Антиротация Pallof в блоке",t:"таз неподвижен",sets:3,reps:"12/сторона",rest:40,prio:2},
+  {n:"Подъём коленей в висе/на брусьях",t:"без раскачки",sets:3,reps:"12–15",rest:45,prio:3}];
+const TIME={
+  25:{label:"25 мин", maxPrio:1, cardioMul:0.45, core:1},
+  45:{label:"45 мин", maxPrio:2, cardioMul:0.8,  core:2},
+  70:{label:"70+ мин",maxPrio:3, cardioMul:1.0,  core:3},
+};
+const RU=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+
+/* ================= СОСТОЯНИЕ ================= */
+let selectedDay=new Date().getDay(), selectedTime=70;
+let current=null;
+let tickHandle=null;
+
+function buildPickers(){
+  const dp=document.getElementById("daypick"); dp.innerHTML="";
+  [1,2,3,4,5,6,0].forEach(d=>{
+    const b=document.createElement("button");
+    b.textContent=RU[d]+" "+DAYS[d].icon;
+    if(d===selectedDay)b.classList.add("on");
+    b.onclick=()=>{selectedDay=d;[...dp.children].forEach(c=>c.classList.remove("on"));b.classList.add("on");run();};
+    dp.appendChild(b);
+  });
+  const tp=document.getElementById("timepick"); tp.innerHTML="";
+  Object.keys(TIME).forEach(v=>{
+    const b=document.createElement("button"); b.textContent=TIME[v].label;
+    if(+v===selectedTime)b.classList.add("on");
+    b.onclick=()=>{selectedTime=+v;[...tp.children].forEach(c=>c.classList.remove("on"));b.classList.add("on");run();};
+    tp.appendChild(b);
+  });
+}
+
+/* ================= РАСЧЁТ ================= */
+function run(){
+  const index=computeIndex();
+  const {z,mean}=baselineZ(index);
+  const m=modeOf(index,z);
+  const tcfg=TIME[selectedTime];
+
+  document.getElementById("idxVal").innerHTML=index+'<small>/100</small>';
+  document.getElementById("zVal").textContent = z!==null
+      ? `база ${Math.round(mean)} · z ${z>=0?"+":""}${z.toFixed(2)}`
+      : "копится базелайн (нужно ≥3 дня)";
+  document.getElementById("modePill").innerHTML=`<span class="pill z-${m.cls}">${m.name}</span>`;
+  document.getElementById("modeflag").textContent = z!==null
+      ? "Режим по отклонению от твоего базелайна (z-score)."
+      : "Режим по абсолютным порогам, пока копится базелайн.";
+
+  const cs=checkins(); const i=cs.findIndex(r=>r.date===today());
+  const rec={date:today(),index,z,mode:m.key,day:selectedDay,time:selectedTime,items:readItems()};
+  if(i>=0)cs[i]=rec; else cs.push(rec);
+  ls.set(K_CHECK,cs);
+
+  const dayKey=(m.key==="rest")?0:selectedDay;
+  const day=DAYS[dayKey];
+
+  const list=[];
+  day.ex.forEach(e=>{
+    if(e.prio>tcfg.maxPrio) return;
+    list.push({n:e.n,t:e.t,apre:!!e.apre,block:"main",
+      sets:day.rec?null:setsFor(e.sets,m.key,e.prio), reps:e.reps,
+      rest:day.rec?null:restFor(e.rest,m.key)});
+  });
+  if(!day.rec){
+    CORE.forEach(e=>{
+      if(e.prio>tcfg.core) return;
+      list.push({n:e.n,t:e.t,apre:false,block:"core",
+        sets:setsFor(e.sets,m.key,e.prio), reps:e.reps, rest:restFor(e.rest,m.key)});
+    });
+  }
+
+  const isInt=day.cardio==="Интервалы";
+  const cardioType=(m.key==="light"&&isInt)?"Zone 2":day.cardio;
+  const cardioMin=Math.round((isInt&&m.key!=="light" ? (day.z2||12) : (day.z2||25)) * tcfg.cardioMul) || 20;
+
+  const draft=ls.get(K_DRAFT,null);
+  const same = draft && draft.date===today() && draft.dayKey===dayKey && draft.time===selectedTime;
+
+  current={date:today(), dayKey, dayName:day.name, dayIcon:day.icon,
+    mode:m.key, modeName:m.name, modeCls:m.cls, time:selectedTime, index, z,
+    ex:list.map(e=>{
+      const old = same ? (draft.ex||[]).find(o=>o.n===e.n) : null;
+      return {...e,
+        rest: old&&old.restCustom ? old.rest : e.rest,
+        restCustom: old?!!old.restCustom:false,
+        done:old?old.done:false, weight:old?old.weight:"", actual:old?old.actual:"",
+        restActual:old?old.restActual:null, doneAt:old?old.doneAt:null};
+    }),
+    cardio:{type:cardioType,min:cardioMin,done: same&&draft.cardio?draft.cardio.done:false},
+    apre: same&&draft.apre?draft.apre:{reps:"",advice:""},
+    rpe:m.rpe, finisher:m.finisher, canApre:m.apre, rec:!!day.rec,
+    /* часы сессии */
+    startedAt: same?draft.startedAt:null,
+    pausedAt:  same?draft.pausedAt:null,
+    pausedMs:  same?(draft.pausedMs||0):0,
+    /* таймер отдыха */
+    rest:      same?draft.rest:null
+  };
+
+  /* сводка плана на вкладке ЕИГ */
+  const v=document.getElementById("verdict");
+  v.className="verdict v-"+m.cls;
+  v.innerHTML=`<h3>${m.verdict}</h3><p>${m.desc}</p>`;
+  const totalSets=current.ex.reduce((a,e)=>a+(e.sets||0),0);
+  document.getElementById("eigPlanSummary").innerHTML=`
+    <div class="resrow eq" style="margin-top:0">
+      <div class="stat"><div class="lab">План на сегодня</div>
+        <div style="font-size:14.5px;font-weight:600;margin-top:5px">${day.icon} ${day.name}</div>
+        <div class="zsub">${current.ex.length} упражнений · ${totalSets} подходов · RPE ${m.rpe}</div></div>
+      <div class="stat"><div class="lab">Кардио</div>
+        <div style="font-size:14.5px;font-weight:600;margin-top:5px">${cardioType}</div>
+        <div class="zsub">${cardioMin} мин</div></div>
+    </div>`;
+  document.getElementById("eigVerdictCard").style.display="block";
+
+  saveDraft();
+  renderTrain();
+  drawChart(); renderCalendar();
+  document.getElementById("trainBadge").style.display="block";
+}
+
+/* ================= ВКЛАДКА ТРЕНИРОВКИ ================= */
+function renderTrain(){
+  if(!current){ document.getElementById("noPlan").style.display="block";
+    document.getElementById("trainBody").style.display="none"; return; }
+  document.getElementById("noPlan").style.display="none";
+  document.getElementById("trainBody").style.display="block";
+  document.getElementById("trainMode").textContent=`${current.dayIcon} ${current.dayName} · ${current.modeName}`;
+
+  const done=current.ex.filter(e=>e.done).length + (current.cardio.done?1:0);
+  const total=current.ex.length+1;
+  document.getElementById("progBar").style.width=Math.round(100*done/total)+"%";
+  document.getElementById("progTxt").textContent=`Выполнено ${done} из ${total}`;
+
+  const mainList=current.ex.filter(e=>e.block==="main");
+  const coreList=current.ex.filter(e=>e.block==="core");
+  let h=mainList.map(exRow).join("");
+  if(coreList.length) h+=`<div class="block-title core">🎯 Блок кора</div>`+coreList.map(exRow).join("");
+
+  const ap=current.ex.find(e=>e.apre);
+  if(current.canApre && ap){
+    h+=`<div class="block-title apre">🎚️ APRE<span class="t">${ap.n}</span></div>
+      <div class="apreBox">
+        <p style="font-size:12.5px;color:var(--mut);margin-bottom:9px">
+          Третий подход — до отказа техники (не до срыва). Введи, сколько вышло.</p>
+        <div class="row">
+          <span style="font-size:13.5px">Повторов в 3-м:</span>
+          <input type="number" id="apreReps" min="1" max="40" placeholder="12" value="${current.apre.reps||""}">
+          <button class="b-ghost b-sm" onclick="calcApre()">Рассчитать</button>
+        </div>
+        <div class="apreOut" id="apreOut" ${current.apre.advice?'style="display:block"':""}>${current.apre.advice||""}</div>
+      </div>`;
+  }
+
+  h+=`<div class="block-title cardio">🚴 Кардио · ${current.cardio.type}</div>
+    <div class="exrow ${current.cardio.done?"done":""}">
+      <div class="cbx ${current.cardio.done?"on":""}" onclick="toggleCardio()"></div>
+      <div class="exbody">
+        <div class="exname">${current.cardio.type} — ${current.cardio.min} мин</div>
+        <div class="exhint">Главный рычаг по висцеральному жиру и HOMA-IR. Недельная цель Zone 2 — 180–200 мин.</div>
+      </div>
+    </div>`;
+
+  if(current.finisher && current.time>=45)
+    h+=`<div class="note"><b>Финишер:</b> 2 круга без отдыха — 40 сек велотренажёр спринт + 15 «мёртвых жуков» + 30 сек планка. Между кругами 90 сек.</div>`;
+  if(!current.rec)
+    h+=`<div class="note">Заминка 5 мин спокойного темпа + растяжка — для самочувствия. На крепатуру и скорость восстановления заметно не влияет.</div>`;
+
+  document.getElementById("sessionBody").innerHTML=h;
+  updateClock();
+}
+
+function exRow(e){
+  const i=current.ex.indexOf(e);
+  const meta = e.sets
+    ? `${e.sets} × ${e.reps} · <span class="rest">пауза ${e.rest} сек${e.restCustom?" (своя)":""}</span>`
+    : e.reps;
+  return `<div class="exrow ${e.done?"done":""}">
+    <div class="cbx ${e.done?"on":""}" onclick="toggleEx(${i})"></div>
+    <div class="exbody">
+      <div class="exname">${e.n}${e.apre?'<span class="tag">APRE</span>':""}</div>
+      <div class="exhint">${e.t}</div>
+      <div class="exmeta">${meta}</div>
+      ${e.sets?`<div class="exinputs">
+        <input type="text" inputmode="decimal" placeholder="вес, кг" value="${e.weight||""}"
+          oninput="setField(${i},'weight',this.value)">
+        <input type="text" inputmode="numeric" placeholder="повторы" value="${e.actual||""}"
+          oninput="setField(${i},'actual',this.value)">
+        <input type="text" inputmode="numeric" placeholder="пауза, сек" value="${e.restCustom?e.rest:""}"
+          oninput="setRest(${i},this.value)">
+      </div>`:""}
+      ${e.restActual?`<div class="restdone">отдых по факту: ${mmss(e.restActual)}</div>`:""}
+    </div>
+  </div>`;
+}
+
+function setField(i,f,v){ current.ex[i][f]=v; saveDraft(); }
+function setRest(i,v){
+  const n=parseInt(v,10);
+  if(v===""||isNaN(n)){ current.ex[i].restCustom=false; }
+  else { current.ex[i].rest=clamp(n,5,600); current.ex[i].restCustom=true; }
+  saveDraft();
+}
+function saveDraft(){ if(current) ls.set(K_DRAFT,current); }
+
+function toggleEx(i){
+  const e=current.ex[i];
+  e.done=!e.done;
+  if(e.done){
+    e.doneAt=Date.now();
+    if(!current.startedAt) clockStart();          // первая галочка запускает секундомер
+    if(e.rest) restStart(i);                      // и сразу отдых
+  }else{
+    e.doneAt=null;
+    if(current.rest && current.rest.exIndex===i) restStop(true);
+  }
+  saveDraft(); renderTrain();
+}
+function toggleCardio(){
+  current.cardio.done=!current.cardio.done;
+  if(current.cardio.done && !current.startedAt) clockStart();
+  saveDraft(); renderTrain();
+}
+
+/* ================= СЕКУНДОМЕР СЕССИИ ================= */
+function clockStart(){
+  current.startedAt=Date.now(); current.pausedAt=null; current.pausedMs=0;
+  saveDraft(); startTick();
+}
+function clockToggle(){
+  if(!current) return;
+  if(!current.startedAt){ clockStart(); }
+  else if(current.pausedAt){                      // снять с паузы
+    current.pausedMs += Date.now()-current.pausedAt;
+    current.pausedAt=null; startTick();
+  }else{ current.pausedAt=Date.now(); }           // поставить на паузу
+  saveDraft(); updateClock();
+}
+function elapsedSec(){
+  if(!current||!current.startedAt) return 0;
+  const end = current.pausedAt || Date.now();
+  return Math.max(0,(end-current.startedAt-(current.pausedMs||0))/1000);
+}
+function updateClock(){
+  const el=document.getElementById("clockVal"); if(!el||!current) return;
+  el.textContent=mmss(elapsedSec());
+  const box=document.getElementById("clock"), btn=document.getElementById("clockBtn");
+  const running=current.startedAt&&!current.pausedAt;
+  box.classList.toggle("run",!!running);
+  btn.textContent = !current.startedAt ? "Старт" : (current.pausedAt?"Продолжить":"Пауза");
+}
+
+/* ================= ТАЙМЕР ОТДЫХА ================= */
+function restStart(i){
+  const e=current.ex[i];
+  current.rest={exIndex:i, name:e.n, total:e.rest, startedAt:Date.now(), endsAt:Date.now()+e.rest*1000, fired:false};
+  saveDraft(); startTick(); renderRest();
+}
+function restAdd(sec){
+  if(!current||!current.rest) return;
+  current.rest.endsAt += sec*1000;
+  current.rest.total = Math.max(5,current.rest.total+sec);
+  if(current.rest.endsAt>Date.now()) current.rest.fired=false;
+  saveDraft(); renderRest();
+}
+/* stop(silent) — фиксируем фактический отдых и прячем панель */
+function restStop(silent){
+  if(!current||!current.rest) return;
+  const r=current.rest;
+  const actual=(Date.now()-r.startedAt)/1000;
+  if(current.ex[r.exIndex]) current.ex[r.exIndex].restActual=Math.round(actual);
+  current.rest=null; saveDraft();
+  document.getElementById("timerBar").classList.remove("on","fin");
+  if(!silent) renderTrain();
+}
+function renderRest(){
+  const bar=document.getElementById("timerBar");
+  if(!current||!current.rest){ bar.classList.remove("on","fin"); return; }
+  const r=current.rest;
+  const left=(r.endsAt-Date.now())/1000;
+  bar.classList.add("on");
+  document.getElementById("tbName").textContent=r.name;
+  if(left<=0){
+    bar.classList.add("fin");
+    document.getElementById("tbLab").textContent="Отдых окончен";
+    document.getElementById("tbVal").textContent="+"+mmss(-left);
+    document.getElementById("tbProg").style.width="100%";
+    if(!r.fired){ r.fired=true; alarm(); }
+  }else{
+    bar.classList.remove("fin");
+    document.getElementById("tbLab").textContent="Отдых";
+    document.getElementById("tbVal").textContent=mmss(left);
+    document.getElementById("tbProg").style.width=Math.max(0,100*left/r.total)+"%";
+  }
+}
+function alarm(){
+  try{ if(navigator.vibrate) navigator.vibrate([220,90,220]); }catch(e){}
+  try{
+    const A=window.AudioContext||window.webkitAudioContext; if(!A) return;
+    const ctx=new A(); const t=ctx.currentTime;
+    [0,0.22].forEach(off=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.frequency.value=880; o.type="sine";
+      g.gain.setValueAtTime(0.0001,t+off);
+      g.gain.exponentialRampToValueAtTime(0.35,t+off+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.18);
+      o.connect(g); g.connect(ctx.destination); o.start(t+off); o.stop(t+off+0.2);
+    });
+    setTimeout(()=>{try{ctx.close()}catch(e){}},900);
+  }catch(e){}
+}
+
+/* один тикер на секундомер и таймер отдыха; время считаем от меток,
+   поэтому сворачивание приложения не сбивает счёт */
+function startTick(){
+  if(tickHandle) return;
+  tickHandle=setInterval(()=>{
+    if(!current){ stopTick(); return; }
+    if(current.startedAt&&!current.pausedAt) updateClock();
+    if(current.rest) renderRest();
+    if(!current.rest && (!current.startedAt||current.pausedAt)) stopTick();
+  },250);
+}
+function stopTick(){ if(tickHandle){clearInterval(tickHandle);tickHandle=null;} }
+
+/* ================= APRE ================= */
+function calcApre(){
+  const el=document.getElementById("apreReps");
+  const reps=parseInt(el.value,10);
+  const out=document.getElementById("apreOut");
+  out.style.display="block";
+  if(!reps||reps<1){ out.innerHTML="Введи число повторов."; return; }
+  const target=12, d=reps-target;
+  let txt;
+  if(d<=-3)      txt="снизить вес на 5–7%";
+  else if(d<=-1) txt="снизить вес на 2–3%";
+  else if(d<=1)  txt="вес оставить прежним";
+  else if(d<=4)  txt="добавить 2–3% к весу";
+  else           txt="добавить 5–7% к весу";
+  const html=`4-й подход: <b>${txt}</b>.<br><span style="color:var(--mut)">Коридор ${target} повторов, вышло ${reps}. Ту же поправку перенеси на стартовый вес следующей такой сессии.</span>`;
+  out.innerHTML=html;
+  current.apre={reps,advice:html};
+  saveDraft();
+}
+
+/* ================= ЗАВЕРШЕНИЕ ================= */
+function finishWorkout(){
+  if(!current){ toast("Сначала рассчитай индекс"); return; }
+  const doneEx=current.ex.filter(e=>e.done);
+  if(!doneEx.length && !current.cardio.done){ toast("Ничего не отмечено"); return; }
+  if(current.rest) restStop(true);
+  const durationSec=Math.round(elapsedSec());
+  const rests=current.ex.filter(e=>e.restActual).map(e=>e.restActual);
+  const avgRest=rests.length?Math.round(rests.reduce((a,b)=>a+b,0)/rests.length):null;
+
+  const ss=sessions();
+  const entry={
+    date:current.date, dayKey:current.dayKey, dayName:current.dayName, dayIcon:current.dayIcon,
+    mode:current.mode, modeName:current.modeName, modeCls:current.modeCls,
+    index:current.index, z:current.z, time:current.time,
+    durationSec, avgRest, totalRestSec:rests.reduce((a,b)=>a+b,0),
+    ex:current.ex.map(e=>({n:e.n,block:e.block,sets:e.sets,reps:e.reps,
+        done:e.done,weight:e.weight||"",actual:e.actual||"",
+        restPlanned:e.rest||null,restActual:e.restActual||null})),
+    cardio:{...current.cardio},
+    apreReps:current.apre.reps||"",
+    savedAt:new Date().toISOString()
+  };
+  const i=ss.findIndex(r=>r.date===entry.date);
+  if(i>=0)ss[i]=entry; else ss.push(entry);
+  ls.set(K_SESS,ss);
+  localStorage.removeItem(K_DRAFT);
+  stopTick();
+  current.startedAt=null; current.pausedAt=null; current.pausedMs=0;
+  toast(`Записано · ${mmss(durationSec)}`);
+  renderCalendar(); renderLog(); renderTrain();
+  document.getElementById("trainBadge").style.display="none";
+}
+
+/* ================= КАЛЕНДАРЬ ================= */
+let calDate=new Date(); calDate.setDate(1);
+let calSel=null;
+const MON=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const COL={peak:"var(--peak)",heavy:"var(--green)",medium:"var(--yellow)",light:"var(--orange)",rest:"var(--red)"};
+function calShift(n){ calDate.setMonth(calDate.getMonth()+n); renderCalendar(); }
+function renderCalendar(){
+  const y=calDate.getFullYear(), mo=calDate.getMonth();
+  document.getElementById("calMonth").textContent=MON[mo]+" "+y;
+  const start=(new Date(y,mo,1).getDay()+6)%7;
+  const days=new Date(y,mo+1,0).getDate();
+  const cs=checkins(), ss=sessions();
+  let h=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map(d=>`<div class="dow">${d}</div>`).join("");
+  for(let i=0;i<start;i++) h+=`<div class="cell empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(mo+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const ci=cs.find(r=>r.date===ds), si=ss.find(r=>r.date===ds);
+    h+=`<div class="cell ${ds===today()?"today":""} ${calSel===ds?"sel":""}" onclick="selDay('${ds}')">
+      ${si?'<span class="w">✓</span>':""}
+      <span class="d">${d}</span>
+      <span class="mk" style="background:${ci?(COL[ci.mode]||"var(--mut)"):"#2a2f3b"}"></span>
+    </div>`;
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  renderCalDetail();
+}
+function selDay(ds){ calSel=(calSel===ds?null:ds); renderCalendar(); }
+function renderCalDetail(){
+  const box=document.getElementById("calDetail");
+  if(!calSel){ box.innerHTML=""; return; }
+  const ci=checkins().find(r=>r.date===calSel);
+  const si=sessions().find(r=>r.date===calSel);
+  const d=new Date(calSel).toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+  if(!ci&&!si){ box.innerHTML=`<div class="card"><h2>${d}</h2><p class="empty-msg">Записей нет.</p></div>`; return; }
+  let h=`<div class="card"><h2>${d}</h2>`;
+  if(ci){
+    const cls=ci.mode==="heavy"?"green":ci.mode==="medium"?"yellow":ci.mode==="light"?"orange":ci.mode==="peak"?"peak":"red";
+    h+=`<div class="logtop">
+      <span class="logbadge z-${cls}">${MODES[ci.mode]?MODES[ci.mode].name:ci.mode}</span>
+      <span style="font-size:13px;color:var(--mut)">индекс ${ci.index}/100${ci.z!=null?` · z ${ci.z>=0?"+":""}${ci.z.toFixed(2)}`:""}</span></div>`;
+    if(ci.items) h+=`<div class="logstats">сон ${ci.items.sleep} · энергия ${ci.items.fatigue} · мышцы ${ci.items.doms} · стресс ${ci.items.stress} · настроение ${ci.items.mood} · ${ci.items.hours} ч сна</div>`;
+  }
+  h += si ? sessionDetailHTML(si) : `<p class="logstats">Тренировка не записана.</p>`;
+  box.innerHTML=h+`</div>`;
+}
+function sessionDetailHTML(s){
+  const done=s.ex.filter(e=>e.done);
+  let h=`<div class="logex"><div style="color:var(--txt);font-weight:600;margin-bottom:5px">${s.dayIcon||""} ${s.dayName}</div>`;
+  if(s.durationSec) h+=`<div>⏱️ Длительность: <b>${mmss(s.durationSec)}</b>${s.avgRest?` · средний отдых <b>${mmss(s.avgRest)}</b>`:""}</div>`;
+  if(!done.length) h+=`<div>Упражнения не отмечены.</div>`;
+  done.forEach(e=>{
+    const extra=[e.weight?`${e.weight} кг`:"", e.actual?`${e.actual} повт.`:"",
+                 e.restActual?`отдых ${mmss(e.restActual)}`:""].filter(Boolean).join(" · ");
+    h+=`<div>✓ <b>${e.n}</b> — ${e.sets?`${e.sets}×${e.reps}`:e.reps}${extra?` · ${extra}`:""}</div>`;
+  });
+  if(s.cardio&&s.cardio.done) h+=`<div>✓ <b>Кардио</b> — ${s.cardio.type}, ${s.cardio.min} мин</div>`;
+  if(s.apreReps) h+=`<div style="margin-top:5px">APRE: 3-й подход — ${s.apreReps} повт.</div>`;
+  return h+`</div>`;
+}
+
+/* ================= ГРАФИК ================= */
+function drawChart(){
+  const data=checkins().slice(-30);
+  const c=document.getElementById("chart"); if(!c) return;
+  const dpr=window.devicePixelRatio||1, w=c.clientWidth||320, h=c.clientHeight||150;
+  c.width=w*dpr; c.height=h*dpr;
+  const x=c.getContext&&c.getContext("2d");
+  if(!x) return;
+  x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+  const pad=20, W=w-2*pad, H=h-2*pad;
+  [["rgba(124,240,208,.12)",85,100],["rgba(47,208,122,.12)",70,85],
+   ["rgba(255,210,59,.10)",50,70],["rgba(255,138,59,.10)",34,50],["rgba(255,77,94,.10)",0,34]]
+   .forEach(([col,lo,hi])=>{ x.fillStyle=col; x.fillRect(pad,pad+H*(1-hi/100),W,H*(hi-lo)/100); });
+  if(data.length<2){ x.fillStyle="#8b93a4"; x.font="13px Spline Sans"; x.fillText("Нужно ≥2 дня",pad,h/2); return; }
+  x.strokeStyle="#c6ff3b"; x.lineWidth=2.5; x.beginPath();
+  data.forEach((r,i)=>{ const px=pad+W*i/(data.length-1), py=pad+H*(1-r.index/100); i?x.lineTo(px,py):x.moveTo(px,py); });
+  x.stroke(); x.fillStyle="#c6ff3b";
+  data.forEach((r,i)=>{ const px=pad+W*i/(data.length-1), py=pad+H*(1-r.index/100);
+    x.beginPath(); x.arc(px,py,3,0,7); x.fill(); });
+}
+
+/* ================= ЛОГ ================= */
+function renderLog(){
+  const ss=sessions().slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const cs=checkins();
+  const cut=new Date(Date.now()-28*864e5).toISOString().slice(0,10);
+  const rec=ss.filter(s=>s.date>=cut);
+  const z2=rec.filter(s=>s.cardio&&s.cardio.done&&/Zone/.test(s.cardio.type))
+              .reduce((a,s)=>a+(s.cardio.min||0),0);
+  const setsTotal=rec.reduce((a,s)=>a+s.ex.filter(e=>e.done&&e.sets).reduce((b,e)=>b+e.sets,0),0);
+  const idxs=cs.filter(r=>r.date>=cut);
+  const avg=idxs.length?Math.round(idxs.reduce((a,r)=>a+r.index,0)/idxs.length):null;
+  const durs=rec.filter(s=>s.durationSec).map(s=>s.durationSec);
+  const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):null;
+  const allRest=rec.filter(s=>s.avgRest).map(s=>s.avgRest);
+  const avgRest=allRest.length?Math.round(allRest.reduce((a,b)=>a+b,0)/allRest.length):null;
+
+  document.getElementById("sumRange").textContent="28 дней";
+  document.getElementById("summary").innerHTML=`
+    <div class="resrow eq" style="margin-top:0">
+      <div class="stat"><div class="lab">Тренировок</div><div class="big">${rec.length}</div></div>
+      <div class="stat"><div class="lab">Средний индекс</div><div class="big">${avg??"—"}</div></div>
+    </div>
+    <div class="resrow eq">
+      <div class="stat"><div class="lab">Zone 2, мин</div><div class="big">${z2}</div><div class="zsub">цель ~760 за 4 нед</div></div>
+      <div class="stat"><div class="lab">Рабочих подходов</div><div class="big">${setsTotal}</div></div>
+    </div>
+    <div class="resrow eq">
+      <div class="stat"><div class="lab">Средняя длительность</div><div class="big" style="font-size:28px">${avgDur?mmss(avgDur):"—"}</div></div>
+      <div class="stat"><div class="lab">Средний отдых</div><div class="big" style="font-size:28px">${avgRest?mmss(avgRest):"—"}</div></div>
+    </div>`;
+
+  const box=document.getElementById("logList");
+  if(!ss.length){ box.innerHTML=`<div class="card"><p class="empty-msg">Пока пусто.<br>Отметь упражнения и нажми «Завершить и записать».</p></div>`; return; }
+  box.innerHTML=ss.map(s=>{
+    const d=new Date(s.date).toLocaleDateString("ru-RU",{day:"2-digit",month:"short"});
+    const cls=s.mode==="heavy"?"green":s.mode==="medium"?"yellow":s.mode==="light"?"orange":s.mode==="peak"?"peak":"red";
+    const done=s.ex.filter(e=>e.done).length;
+    return `<div class="logitem">
+      <div class="logtop">
+        <span class="logdate">${d}</span>
+        <span class="logbadge z-${cls}">${s.modeName}</span>
+        <span style="font-size:12px;color:var(--mut);margin-left:auto">индекс ${s.index}</span>
+      </div>
+      <div class="logstats">${s.dayIcon||""} ${s.dayName} · ${done} упр.${s.durationSec?` · ⏱️ ${mmss(s.durationSec)}`:""}${s.avgRest?` · отдых ~${mmss(s.avgRest)}`:""}${s.cardio&&s.cardio.done?` · кардио ${s.cardio.min} мин`:""}</div>
+      <details><summary>Подробно</summary>${sessionDetailHTML(s)}</details>
+    </div>`;
+  }).join("");
+}
+
+/* ================= ЭКСПОРТ ================= */
+function dl(name,text,type){
+  const a=document.createElement("a"); a.download=name;
+  try{
+    const u=URL.createObjectURL(new Blob([text],{type}));
+    a.href=u; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
+  }catch(e){
+    a.href="data:"+type+";charset=utf-8,"+encodeURIComponent(text); a.click();
+  }
+}
+function exportJSON(){
+  dl(`eig-export-${today()}.json`,
+     JSON.stringify({checkins:checkins(),sessions:sessions()},null,2),"application/json");
+  toast("JSON выгружен");
+}
+function exportCSV(){
+  const rows=[["дата","режим","индекс","z","день","длительность_сек","средний_отдых_сек",
+               "упражнение","блок","подходы","повторы","вес","факт_повторы",
+               "пауза_план_сек","пауза_факт_сек","выполнено"]];
+  sessions().forEach(s=>{
+    const base=[s.date,s.modeName,s.index,s.z!=null?s.z.toFixed(2):"",s.dayName,
+                s.durationSec||"",s.avgRest||""];
+    s.ex.forEach(e=>rows.push([...base,e.n,e.block,e.sets||"",e.reps,e.weight,e.actual,
+      e.restPlanned||"",e.restActual||"",e.done?"да":"нет"]));
+    if(s.cardio) rows.push([...base,"Кардио "+s.cardio.type,"cardio","",s.cardio.min+" мин","","","","",
+      s.cardio.done?"да":"нет"]);
+  });
+  const csv="\uFEFF"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+  dl(`eig-log-${today()}.csv`,csv,"text/csv;charset=utf-8");
+  toast("CSV выгружен");
+}
+
+/* ================= ВКЛАДКИ ================= */
+function tab(name){
+  ["eig","train","cal","log"].forEach(t=>{
+    document.getElementById("tab-"+t).classList.toggle("on",t===name);
+    document.getElementById("nav-"+t).classList.toggle("on",t===name);
+  });
+  if(name==="train") renderTrain();
+  if(name==="cal"){ renderCalendar(); drawChart(); }
+  if(name==="log") renderLog();
+  window.scrollTo(0,0);
+}
+
+function resetForm(){
+  ITEMS.forEach(it=>{document.getElementById(it.k).value=it.def;document.getElementById("n_"+it.k).textContent=it.def;});
+  document.getElementById("hours").value=7.5; document.getElementById("nHours").textContent=7.5;
+  document.getElementById("eigVerdictCard").style.display="none";
+  document.getElementById("idxVal").innerHTML='—<small>/100</small>';
+  document.getElementById("zVal").textContent=""; document.getElementById("modeflag").textContent="";
+  document.getElementById("modePill").innerHTML='<span class="pill z-yellow">—</span>';
+  stopTick(); current=null; localStorage.removeItem(K_DRAFT);
+  document.getElementById("trainBadge").style.display="none";
+  renderTrain();
+}
+
+/* ================= СТАРТ ================= */
+buildPickers(); renderCalendar(); renderLog(); drawChart(); renderTrain();
+(function restore(){
+  const c=checkins().find(r=>r.date===today());
+  if(!c||!c.items) return;
+  ITEMS.forEach(it=>{ if(c.items[it.k]!=null){
+    document.getElementById(it.k).value=c.items[it.k];
+    document.getElementById("n_"+it.k).textContent=c.items[it.k]; }});
+  if(c.items.hours){ document.getElementById("hours").value=c.items.hours;
+    document.getElementById("nHours").textContent=c.items.hours; }
+  if(c.day!=null) selectedDay=c.day;
+  if(c.time) selectedTime=c.time;
+  buildPickers(); run();
+  if(current&&(current.rest||(current.startedAt&&!current.pausedAt))){ startTick(); renderRest(); }
+})();
+
+document.addEventListener("visibilitychange",()=>{        // вернулись в приложение — пересчитать по меткам
+  if(!document.hidden&&current){ updateClock(); if(current.rest) renderRest(); }
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
