@@ -1,0 +1,94 @@
+/* tokens.css — токены Material 3: цвет (light/dark), форма, тип-шкала. */
+
+:root{
+  color-scheme: light;
+  --md-sys-color-primary:#006C4C; --md-sys-color-on-primary:#FFFFFF;
+  --md-sys-color-primary-container:#8FF7C6; --md-sys-color-on-primary-container:#002114;
+  --md-sys-color-secondary:#006876; --md-sys-color-on-secondary:#FFFFFF;
+  --md-sys-color-secondary-container:#9EEFFF; --md-sys-color-on-secondary-container:#001F24;
+  --md-sys-color-tertiary:#9C4238; --md-sys-color-on-tertiary:#FFFFFF;
+  --md-sys-color-tertiary-container:#FFDAD5; --md-sys-color-on-tertiary-container:#410002;
+  --md-sys-color-amber:#7A5900; --md-sys-color-amber-container:#FFDF9E; --md-sys-color-on-amber-container:#261A00;
+  --md-sys-color-error:#BA1A1A; --md-sys-color-error-container:#FFDAD6; --md-sys-color-on-error-container:#410002;
+  --md-sys-color-surface:#FBFDF9; --md-sys-color-on-surface:#191C1A; --md-sys-color-on-surface-variant:#3F4944;
+  --md-sys-color-outline:#6F7973; --md-sys-color-outline-variant:#BFC9C2;
+  --md-sys-color-surface-container-lowest:#FFFFFF; --md-sys-color-surface-container-low:#F4F7F3;
+  --md-sys-color-surface-container:#EEF1ED; --md-sys-color-surface-container-high:#E8ECE7;
+  --md-sys-color-surface-container-highest:#E2E6E1;
+  --md-sys-shape-corner-large:20px; --md-sys-shape-corner-extra-large:28px; --md-sys-shape-corner-full:9999px;
+  --nav-h:80px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --md-sys-color-primary:#72DBAB; --md-sys-color-on-primary:#003824;
+    --md-sys-color-primary-container:#005236; --md-sys-color-on-primary-container:#8FF7C6;
+    --md-sys-color-secondary:#86D2E1; --md-sys-color-on-secondary:#00363E;
+    --md-sys-color-secondary-container:#004F59; --md-sys-color-on-secondary-container:#9EEFFF;
+    --md-sys-color-tertiary:#FFB4A9; --md-sys-color-on-tertiary:#5F1410;
+    --md-sys-color-tertiary-container:#7D2B23; --md-sys-color-on-tertiary-container:#FFDAD5;
+    --md-sys-color-amber:#F5C048; --md-sys-color-amber-container:#5B4200; --md-sys-color-on-amber-container:#FFDF9E;
+    --md-sys-color-error:#FFB4AB; --md-sys-color-error-container:#93000A; --md-sys-color-on-error-container:#FFDAD6;
+    --md-sys-color-surface:#111418; --md-sys-color-on-surface:#E1E2E8; --md-sys-color-on-surface-variant:#BFC9C2;
+    --md-sys-color-outline:#89938C; --md-sys-color-outline-variant:#3F4944;
+    --md-sys-color-surface-container-lowest:#0C0F13; --md-sys-color-surface-container-low:#191C20;
+    --md-sys-color-surface-container:#1D2024; --md-sys-color-surface-container-high:#282A2F;
+    --md-sys-color-surface-container-highest:#33353A;
+  }
+}
+
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --md-sys-color-primary:#72DBAB; --md-sys-color-on-primary:#003824;
+  --md-sys-color-primary-container:#005236; --md-sys-color-on-primary-container:#8FF7C6;
+  --md-sys-color-secondary:#86D2E1; --md-sys-color-on-secondary:#00363E;
+  --md-sys-color-secondary-container:#004F59; --md-sys-color-on-secondary-container:#9EEFFF;
+  --md-sys-color-tertiary:#FFB4A9; --md-sys-color-on-tertiary:#5F1410;
+  --md-sys-color-tertiary-container:#7D2B23; --md-sys-color-on-tertiary-container:#FFDAD5;
+  --md-sys-color-amber:#F5C048; --md-sys-color-amber-container:#5B4200; --md-sys-color-on-amber-container:#FFDF9E;
+  --md-sys-color-error:#FFB4AB; --md-sys-color-error-container:#93000A; --md-sys-color-on-error-container:#FFDAD6;
+  --md-sys-color-surface:#111418; --md-sys-color-on-surface:#E1E2E8; --md-sys-color-on-surface-variant:#BFC9C2;
+  --md-sys-color-outline:#89938C; --md-sys-color-outline-variant:#3F4944;
+  --md-sys-color-surface-container-lowest:#0C0F13; --md-sys-color-surface-container-low:#191C20;
+  --md-sys-color-surface-container:#1D2024; --md-sys-color-surface-container-high:#282A2F;
+  --md-sys-color-surface-container-highest:#33353A;
+}
+
+/* ---- слой прозрачности ----
+   Карточки не рисуются сплошной заливкой, а «стеклянные»: полупрозрачный тон
+   поверхности + размытие фона. Тени по-прежнему запрещены — глубину даёт прозрачность. */
+:root{
+  --glass-card:56%;      /* сколько тона остаётся в карточке */
+  --glass-tile:40%;      /* вложенные плитки прозрачнее */
+  --glass-blur:18px;
+  --bg-a:color-mix(in srgb, var(--md-sys-color-primary-container) 88%, transparent);
+  --bg-b:color-mix(in srgb, var(--md-sys-color-secondary-container) 80%, transparent);
+  --bg-c:color-mix(in srgb, var(--md-sys-color-amber-container) 62%, transparent);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --glass-card:52%; --glass-tile:36%;
+    --bg-a:color-mix(in srgb, var(--md-sys-color-primary-container) 62%, transparent);
+    --bg-b:color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent);
+    --bg-c:color-mix(in srgb, var(--md-sys-color-amber-container) 40%, transparent);
+  }
+}
+:root[data-theme="dark"]{
+  --glass-card:52%; --glass-tile:36%;
+  --bg-a:color-mix(in srgb, var(--md-sys-color-primary-container) 62%, transparent);
+  --bg-b:color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent);
+  --bg-c:color-mix(in srgb, var(--md-sys-color-amber-container) 40%, transparent);
+}
+
+/* ---- тип-шкала ---- */
+.display-m { font-size:45px; line-height:52px; letter-spacing:-0.25px; font-weight:400; }
+.headline-s{ font-size:24px; line-height:32px; font-weight:400; }
+.title-l   { font-size:22px; line-height:28px; font-weight:400; }
+.title-m   { font-size:16px; line-height:24px; font-weight:500; }
+.body-l    { font-size:16px; line-height:24px; font-weight:400; }
+.body-m    { font-size:14px; line-height:20px; font-weight:400; }
+.label-l   { font-size:14px; line-height:20px; font-weight:500; }
+.label-m   { font-size:12px; line-height:16px; font-weight:500; }
+.label-s   { font-size:11px; line-height:16px; font-weight:500; }
+.num       { font-variant-numeric: tabular-nums; }
